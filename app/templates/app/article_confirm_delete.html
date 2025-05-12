@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Удалить статью</h2>
+<p>Вы уверены, что хотите удалить статью "{{ article.title }}"?</p>
+<form method="post">
+    {% csrf_token %}
+    {% if user == article.author or user.is_superuser %}
+    <button type="submit" class="btn btn-danger">Удалить</button>
+    {% endif %}
+    <a href="{% url 'article_detail' article.pk %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

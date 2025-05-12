@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ article.title }}</h2>
+
+<div class="reactions mt-3">
+    <button class="btn btn-outline-success reaction-btn"
+            data-type="like"
+            data-content-type="{{ article_type_id }}"
+            data-object-id="{{ article.id }}">
+        <i class="fas fa-thumbs-up"></i>
+        <span class="likes-count">{{ article.likes }}</span>
+    </button>
+    <button class="btn btn-outline-danger reaction-btn"
+            data-type="dislike"
+            data-content-type="{{ article_type_id }}"
+            data-object-id="{{ article.id }}">
+        <i class="fas fa-thumbs-down"></i>
+        <span class="dislikes-count">{{ article.dislikes }}</span>
+    </button>
+</div>
+
+    <p>{{ article.content }}</p>
+    
+    {% if user == article.author %}
+    <a href="{% url 'edit_article' article.pk %}" class="btn btn-warning">Редактировать</a>
+    <a href="{% url 'delete_article' article.pk %}" class="btn btn-danger">Удалить</a>
+    {% endif %}
+    
+    <hr>
+    
+    <h3>Комментарии</h3>
+    {% if user.is_authenticated %}
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+    </form>
+    {% else %}
+        <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить комментарий.</p>
+    {% endif %}
+
+    {% if comments %}
+        {% for comment in comments %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">{{ comment.content }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        {{ comment.author.username }} - {{ comment.created_at|date:"d.m.Y H:i" }}
+                    </small>
+                    <div class="reactions">
+                        <button class="btn btn-sm btn-outline-success reaction-btn"
+                                data-type="like"
+                                data-content-type="{{ comment_type_id }}"
+                                data-object-id="{{ comment.id }}">
+                            <i class="fas fa-thumbs-up"></i>
+                            <span class="likes-count">{{ comment.likes }}</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger reaction-btn"
+                                data-type="dislike"
+                                data-content-type="{{ comment_type_id }}"
+                                data-object-id="{{ comment.id }}">
+                            <i class="fas fa-thumbs-down"></i>
+                            <span class="dislikes-count">{{ comment.dislikes }}</span>
+                        </button>
+                    </div>
+                    {% if user == comment.author %}
+                        <a href="{% url 'edit_comment' comment.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                        <a href="{% url 'delete_comment' comment.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                    {% endif %}
+                </div>
+                
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>Пока нет комментариев.</p>
+    {% endif %}
+    
+    <a href="{% url 'articles_list' %}" class="btn btn-secondary mt-3">Назад к списку</a>
+</div>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script src="{% static 'js/reactions.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        initReactions({{ user.is_authenticated|yesno:"true,false" }}, "{% url 'login' %}");
+});
+</script>
+
+{% endblock %}

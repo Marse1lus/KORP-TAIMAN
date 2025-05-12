@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Добавить фото в альбом "{{ album.title }}"</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="file" name="photo" multiple>
+    <button type="submit" class="btn btn-success">Загрузить</button>
+    <a href="{% url 'event_album_detail' album.pk %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

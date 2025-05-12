@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h2>{{ album.title }}</h2>
+<form id="csrf-form" style="display:none;">
+    {% csrf_token %}
+</form>
+<p>{{ album.description }}</p>
+<p><b>Дата мероприятия:</b> {{ album.event_date }}</p>
+
+{% if user.is_authenticated %}
+    <a href="{% url 'add_event_photo' album.pk %}" class="btn btn-success mb-3">Добавить фото</a>
+    <a href="{% url 'add_event_comment' album.pk %}" class="btn btn-primary mb-3">Добавить комментарий</a>
+{% endif %}
+
+<div class="reactions mb-3">
+    <button class="btn btn-outline-success reaction-btn"
+            data-type="like"
+            data-content-type="{{ album_type_id }}"
+            data-object-id="{{ album.id }}">
+        👍 <span class="likes-count">{{ album.likes }}</span>
+    </button>
+    <button class="btn btn-outline-danger reaction-btn"
+            data-type="dislike"
+            data-content-type="{{ album_type_id }}"
+            data-object-id="{{ album.id }}">
+        👎 <span class="dislikes-count">{{ album.dislikes }}</span>
+    </button>
+</div>
+
+<h4>Фотографии</h4>
+<div class="row">
+    {% for photo in photos %}
+        <div class="col-md-3 mb-3">
+            <img src="{{ photo.photo.url }}" class="img-fluid rounded" alt="{{ photo.caption }}">
+            {% if photo.caption %}
+                <p class="text-center">{{ photo.caption }}</p>
+            {% endif %}
+            <div class="reactions mb-2">
+                <button class="btn btn-sm btn-outline-success reaction-btn"
+                        data-type="like"
+                        data-content-type="{{ photo_type_id }}"
+                        data-object-id="{{ photo.id }}">
+                    <i class="fas fa-thumbs-up"></i>
+                    <span class="likes-count">{{ photo.likes }}</span>
+                </button>
+                <button class="btn btn-sm btn-outline-danger reaction-btn"
+                        data-type="dislike"
+                        data-content-type="{{ photo_type_id }}"
+                        data-object-id="{{ photo.id }}">
+                    <i class="fas fa-thumbs-down"></i>
+                    <span class="dislikes-count">{{ photo.dislikes }}</span>
+                </button>
+            </div>
+            <a href="{% url 'add_photo_comment' photo.id %}" class="btn btn-primary btn-sm mt-2">Комментировать</a>
+        </div>
+    {% empty %}
+        <p>Фотографий пока нет.</p>
+    {% endfor %}
+</div>
+
+<h4>Комментарии</h4>
+<ul>
+    {% for comment in comments %}
+        <li>{{ comment.author.username }}: {{ comment.text }} ({{ comment.created_at|date:"d.m.Y H:i" }})</li>
+    {% empty %}
+        <li>Комментариев пока нет.</li>
+    {% endfor %}
+</ul>
+<a href="{% url 'event_albums_list' %}" class="btn btn-secondary mt-3">Назад к альбомам</a>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script src="{% static 'js/reactions.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initReactions("{% if user.is_authenticated %}true{% else %}false{% endif %}", "{% url 'login' %}");
+});
+</script>
+{% endblock %}

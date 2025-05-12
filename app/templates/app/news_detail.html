@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ news_item.title }}</h2>
+
+{% if news_item.image %}
+    <img src="{{ news_item.image.url }}" alt="Изображение" class="img-fluid mb-3" style="max-width: 100%; max-height: 350px; object-fit: contain;">
+{% endif %}
+
+<p>{{ news_item.content }}</p>
+<p><b>Категория:</b> {{ news_item.category.name }}</p>
+<p><b>Автор:</b> {{ news_item.author.username }}</p>
+<p><b>Дата публикации:</b> {{ news_item.published_date|date:"d.m.Y H:i" }}</p>
+{% if user == news_item.author %}
+    <a href="{% url 'edit_news' news_item.pk %}" class="btn btn-warning">Редактировать</a>
+    <a href="{% url 'delete_news' news_item.pk %}" class="btn btn-danger">Удалить</a>
+{% endif %}
+<hr>
+<h4>Комментарии</h4>
+{% if user.is_authenticated %}
+    <a href="{% url 'add_news_comment' news_item.pk %}" class="btn btn-success btn-sm mb-2">Добавить комментарий</a>
+{% endif %}
+<ul>
+    {% for comment in comments %}
+        <li>
+            {{ comment.text }} ({{ comment.author.username }}, {{ comment.created_at|date:"d.m.Y H:i" }})
+            {% if user == comment.author %}
+                <a href="{% url 'edit_news_comment' comment.pk %}" class="btn btn-warning btn-sm">Редактировать</a>
+                <a href="{% url 'delete_news_comment' comment.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+            {% endif %}
+        </li>
+    {% empty %}
+        <li>Комментариев пока нет.</li>
+    {% endfor %}
+</ul>
+<a href="{% url 'news_list' %}" class="btn btn-secondary mt-3">Назад к новостям</a>
+{% if news_item.attachment %}
+    <p>
+        <a href="{{ news_item.attachment.url }}" download class="btn btn-outline-primary">
+            Скачать вложение
+        </a>
+    </p>
+{% endif %}
+{% endblock %}

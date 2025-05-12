@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Добавить комментарий к фото</h2>
+<img src="{{ photo.photo.url }}" class="img-fluid mb-3" style="max-width: 300px;">
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Добавить</button>
+    <a href="{% url 'event_album_detail' photo.album.pk %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

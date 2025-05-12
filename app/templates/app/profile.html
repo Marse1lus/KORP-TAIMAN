@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Профиль: {{ profile_user.username }}</h2>
+    {% if profile_user.photo %}
+        <img src="{{ profile_user.photo.url }}" alt="Аватар" width="120" class="mb-3">
+    {% endif %}
+    <p><b>Email:</b> {{ profile_user.email }}</p>
+    <p><b>Имя:</b> {{ profile_user.first_name }}</p>
+    <p><b>Фамилия:</b> {{ profile_user.last_name }}</p>
+    <p><b>Должность:</b> {{ profile_user.position }}</p>
+    <p><b>Отдел:</b> {{ profile_user.department }}</p>
+    <p><b>О себе:</b> {{ profile_user.bio }}</p>
+    {% if user == profile_user %}
+        <a href="{% url 'edit_profile' profile_user.pk %}" class="btn btn-warning">Редактировать профиль</a>
+    {% endif %}
+    <hr>
+    <h4>Статьи пользователя</h4>
+    <ul>
+        {% for article in articles %}
+            <li><a href="{% url 'article_detail' article.pk %}">{{ article.title }}</a></li>
+        {% empty %}
+            <li>Нет статей</li>
+        {% endfor %}
+    </ul>
+    <h4>Комментарии пользователя</h4>
+    <ul>
+        {% for comment in comments %}
+            <li>{{ comment.content|truncatewords:10 }} ({{ comment.created_at|date:"d.m.Y H:i" }})</li>
+        {% empty %}
+            <li>Нет комментариев</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
