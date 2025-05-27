@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Project specific
+media/
+static/
+
+# Environment variables
+.env
+.env.*
+*.env
+
+# Logs and temporary files
+*.log.*
+*.tmp
+*.temp
+
+# Python cache and test files
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Build and dependency directories
+node_modules/
+bower_components/
+
+# Migration files (optional)
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# Generated static files
+staticfiles/
+
+# Local configuration files
+config.local.py
+settings.local.py
+
+# Backup files
+*.bak
+*.backup
+*~ 

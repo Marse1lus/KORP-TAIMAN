@@ -1,4 +1,6 @@
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from app.views import (
 	NewsCategoryList, NewsList, NewsDetail, 
 	NewsCommentList, RegisterView, TokenObtainPairView, 
@@ -26,6 +28,9 @@ urlpatterns = [
 		path('knowledge-articles/<int:article_id>/comments/', KnowledgeCommentList.as_view(), name='knowledge-comment-list'),
 		path('knowledge-articles/<int:article_id>/comments/<int:comment_id>/', KnowledgeCommentDetail.as_view(), name='knowledge-comment-detail'),
 	])),
-	path('', include('app.urls')),  
-]
+	path('', include('app.urls')),
+	path('kb/', include('kb.urls')),
+	path('news/', include('news_app.urls')),
+	path('albums/', include('albums.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

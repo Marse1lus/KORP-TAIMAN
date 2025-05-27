@@ -25,7 +25,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 	'rest_framework',
     'rest_framework_simplejwt',
-    'app',  
+    'app',
+    'kb',
+    'news_app',
+	'albums', 
 ]
 
 MIDDLEWARE = [
@@ -44,7 +47,13 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'templates',
+            BASE_DIR / 'news_app' / 'templates',
+            BASE_DIR / 'app' / 'templates',
+            BASE_DIR / 'kb' / 'templates',
+            BASE_DIR / 'albums' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -155,3 +164,8 @@ CORS_ALLOWED_ORIGINS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media' 
+
+# Настройки аутентификации
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'

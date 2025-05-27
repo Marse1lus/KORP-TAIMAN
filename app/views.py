@@ -5,12 +5,13 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from app.models import (
 	KnowledgeCategory, KnowledgeArticle, KnowledgeComment,
-	NewsCategory, News, NewsComment,
 	EventAlbum, EventPhoto, EventComment, Reaction
 )
+from news_app.models import News, NewsComment
+from news_app.forms import NewsForm, NewsCommentForm
 from .serializer import (
 	KnowledgeCategorySerializer, KnowledgeArticleSerializer, KnowledgeCommentSerializer,
-	NewsCategorySerializer, NewsSerializer, NewsCommentSerializer,
+	NewsCategorySerializer, NewsSerializer, 
 	EventAlbumSerializer, EventPhotoSerializer, EventCommentSerializer, ReactionSerializer
 )
 from .serializer import UserSerializer 
@@ -29,7 +30,7 @@ from rest_framework.generics import ListCreateAPIView
 from config.permission import IsAuthor
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import render
-from app.forms import LoginForm, UserRegistrationForm, KnowledgeArticleForm, KnowledgeCommentForm, ProfileEditForm, NewsForm, NewsCommentForm, EventAlbumForm, EventPhotoForm, PhotoCommentForm
+from app.forms import LoginForm, UserRegistrationForm, KnowledgeArticleForm, KnowledgeCommentForm, ProfileEditForm, EventAlbumForm, EventPhotoForm
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
@@ -41,6 +42,7 @@ from .forms import LoginForm, UserRegistrationForm
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication
 from django.http import HttpResponseForbidden
+from albums.forms import PhotoCommentForm, EventCommentForm
 
 class CustomPagination(PageNumberPagination):
 	page_size = 10
@@ -355,12 +357,11 @@ class ReactionView(APIView):
 		serializer = ReactionSerializer(data=request.data)
 		if serializer.is_valid():
 			try:
-			
 				content_type_value = request.data.get('content_type')
-				if content_type_value.isdigit():
-					content_type = ContentType.objects.get(id=content_type_value)
-				else:
-					content_type = ContentType.objects.get(model=content_type_value.lower())
+				try:
+					content_type = ContentType.objects.get(id=int(content_type_value))
+				except (ValueError, TypeError):
+					content_type = ContentType.objects.get(model=str(content_type_value).lower())
 				
 				model = content_type.model_class()
 			
@@ -501,22 +502,29 @@ class KnowledgeCommentDetail(APIView):
 		return Response(status=status.HTTP_204_NO_CONTENT)
 
 def home(request):
-	category_id = request.GET.get('category')
-	search_query = request.GET.get('q')
-	categories = KnowledgeCategory.objects.all()
+    from app.models import KnowledgeArticle, KnowledgeCategory, EventAlbum
+    from news_app.models import News
+    category_id = request.GET.get('category')
+    search_query = request.GET.get('q')
+    categories = KnowledgeCategory.objects.all()
 
-	articles = KnowledgeArticle.objects.all()
-	if category_id:
-		articles = KnowledgeArticle.objects.filter(category_id=category_id)
-	if search_query:
-		articles =articles.filter(title__icontains=search_query)
+    articles = KnowledgeArticle.objects.all()
+    if category_id:
+        articles = articles.filter(category_id=category_id)
+    if search_query:
+        articles = articles.filter(title__icontains=search_query)
 
-	return render(request, 'app/home.html',{
-		'articles': articles,
-		'categories': categories,
-		'selected_category': int(category_id) if category_id else None,
-		'search_query': search_query,
-	})
+    news_list = News.objects.order_by('-published_date')[:6]
+    albums = EventAlbum.objects.order_by('-event_date')[:6]
+
+    return render(request, 'app/home.html', {
+        'articles': articles,
+        'categories': categories,
+        'selected_category': int(category_id) if category_id else None,
+        'search_query': search_query,
+        'news_list': news_list,
+        'albums': albums,
+    })
 
 def article_detail(request, pk):
 	article = get_object_or_404(KnowledgeArticle, pk=pk)
@@ -535,7 +543,7 @@ def article_detail(request, pk):
 	else:
 		form = KnowledgeCommentForm()
 
-	return render(request, 'app/article_detail.html', {
+	return render(request, 'kb/article_detail.html', {
         'article': article,
         'comments': comments,
         'form': form,
@@ -547,10 +555,14 @@ def articles_list(request):
 	from app.models import KnowledgeArticle, KnowledgeCategory
 	articles = KnowledgeArticle.objects.all()
 	categories = KnowledgeCategory.objects.all()
-	return render(request, 'app/articles_list.html',{
+	search_query = request.GET.get('q')
+	if search_query:
+		articles = articles.filter(title__icontains=search_query)
+	return render(request, 'kb/article_list.html',{
 		'articles': articles,
 		'categories': categories,
-		})
+		'search_query': search_query,
+	})
 
 @login_required
 def create_article(request):
@@ -564,7 +576,7 @@ def create_article(request):
 	else:
 		form = KnowledgeArticleForm()
 	
-	return render(request, 'app/create_article.html', {'form': form})
+	return render(request, 'kb/create_article.html', {'form': form})
 
 def edit_article(request, pk):
 	article = get_object_or_404(KnowledgeArticle, pk=pk)
@@ -575,7 +587,7 @@ def edit_article(request, pk):
 			return redirect('article_detail', pk=article.pk)
 	else:
 		form = KnowledgeArticleForm(instance=article)
-	return render(request, 'app/edit_article.html',{'form': form, 'article': article})
+	return render(request, 'kb/edit_article.html',{'form': form, 'article': article})
 
 def user_login(request):
 	if request.method == 'POST':
@@ -604,7 +616,7 @@ def register(request):
 	return render(request, 'app/register.html', {'form': form})
 
 @login_required
-def edit_comment(request, pk):
+def edit_comment(request, article_id, pk):
     comment = get_object_or_404(KnowledgeComment, pk=pk)
     if request.user != comment.author:
         return HttpResponseForbidden("Вы не можете редактировать этот комментарий.")
@@ -612,20 +624,19 @@ def edit_comment(request, pk):
         form = KnowledgeCommentForm(request.POST, instance=comment)
         if form.is_valid():
             form.save()
-            return redirect('article_detail', pk=comment.article.pk)
+            return redirect('article_detail', pk=article_id)
     else:
         form = KnowledgeCommentForm(instance=comment)
     return render(request, 'app/edit_comment.html', {'form': form, 'comment': comment})
 
 @login_required
-def delete_comment(request, pk):
-    comment = get_object_or_404(KnowledgeComment, pk=pk)
+def delete_article_comment(request, article_id, pk):
+    comment = get_object_or_404(KnowledgeComment, pk=pk, article_id=article_id)
     if request.user != comment.author:
         return HttpResponseForbidden("Вы не можете удалить этот комментарий.")
-    article_pk = comment.article.pk
     if request.method == 'POST':
         comment.delete()
-        return redirect('article_detail', pk=article_pk)
+        return redirect('article_detail', pk=article_id)
     return render(request, 'app/delete_comment.html', {'comment': comment})
 
 @login_required
@@ -655,12 +666,32 @@ def edit_profile(request, pk):
 
 def news_list(request):
     news = News.objects.all().order_by('-published_date')
-    return render(request, 'app/news_list.html', {'news': news})
+    return render(request, 'news_app/news_list.html', {'news': news})
 
 def news_detail(request, pk):
     news_item = get_object_or_404(News, pk=pk)
     comments = NewsComment.objects.filter(news=news_item)
-    return render(request, 'app/news_detail.html', {'news_item': news_item, 'comments': comments})
+    news_type_id = ContentType.objects.get_for_model(News).id
+    comment_type_id = ContentType.objects.get_for_model(NewsComment).id
+
+    if request.method == 'POST' and request.user.is_authenticated:
+        form = NewsCommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.news = news_item
+            comment.author = request.user
+            comment.save()
+            return redirect('news_detail', pk=pk)
+    else:
+        form = NewsCommentForm()
+
+    return render(request, 'news_app/news_detail.html', {
+        'news_item': news_item,
+        'comments': comments,
+        'form': form,
+        'news_type_id': news_type_id,
+        'comment_type_id': comment_type_id,
+    })
 
 @login_required
 def create_news(request):
@@ -673,7 +704,7 @@ def create_news(request):
             return redirect('news_detail', pk=news.pk)
     else:
         form = NewsForm()
-    return render(request, 'app/news_form.html', {'form': form})
+    return render(request, 'news_app/news_form.html', {'form': form})
 
 @login_required
 def edit_news(request, pk):
@@ -687,7 +718,7 @@ def edit_news(request, pk):
             return redirect('news_detail', pk=news.pk)
     else:
         form = NewsForm(instance=news)
-    return render(request, 'app/news_form.html', {'form': form, 'news': news})
+    return render(request, 'news_app/news_form.html', {'form': form, 'news': news})
 
 @login_required
 def delete_news(request, pk):
@@ -697,7 +728,7 @@ def delete_news(request, pk):
     if request.method == 'POST':
         news.delete()
         return redirect('news_list')
-    return render(request, 'app/news_confirm_delete.html', {'news': news})
+    return render(request, 'news_app/news_confirm_delete.html', {'news': news})
 
 @login_required
 def add_news_comment(request, news_id):
@@ -712,11 +743,11 @@ def add_news_comment(request, news_id):
             return redirect('news_detail', pk=news_id)
     else:
         form = NewsCommentForm()
-    return render(request, 'app/news_comment_form.html', {'form': form, 'news_item': news_item})
+    return render(request, 'news_app/news_comment_form.html', {'form': form, 'news_item': news_item})
 
 @login_required
-def edit_news_comment(request, pk):
-    comment = get_object_or_404(NewsComment, pk=pk)
+def edit_news_comment(request, news_id, pk):
+    comment = get_object_or_404(NewsComment, pk=pk, news_id=news_id)
     if request.user != comment.author:
         return HttpResponseForbidden("Вы не можете редактировать этот комментарий.")
     if request.method == 'POST':
@@ -726,18 +757,17 @@ def edit_news_comment(request, pk):
             return redirect('news_detail', pk=comment.news.pk)
     else:
         form = NewsCommentForm(instance=comment)
-    return render(request, 'app/news_comment_form.html', {'form': form, 'news_item': comment.news})
+    return render(request, 'news_app/news_comment_form.html', {'form': form, 'news_item': comment.news})
 
 @login_required
-def delete_news_comment(request, pk):
-    comment = get_object_or_404(NewsComment, pk=pk)
+def delete_news_comment(request, news_id, pk):
+    comment = get_object_or_404(NewsComment, pk=pk, news_id=news_id)
     if request.user != comment.author:
         return HttpResponseForbidden("Вы не можете удалить этот комментарий.")
-    news_pk = comment.news.pk
     if request.method == 'POST':
         comment.delete()
-        return redirect('news_detail', pk=news_pk)
-    return render(request, 'app/news_comment_confirm_delete.html', {'comment': comment})
+        return redirect('news_detail', pk=news_id)
+    return render(request, 'news_app/news_comment_confirm_delete.html', {'comment': comment})
 
 @login_required
 def delete_article(request, pk):
@@ -758,7 +788,7 @@ def moderate_comment(request, pk):
 
 def event_albums_list(request):
     albums = EventAlbum.objects.all().order_by('-event_date')
-    return render(request, 'app/event_albums_list.html', {'albums': albums})
+    return render(request, 'albums/event_albums_list.html', {'albums': albums})
 
 def event_album_detail(request, pk):
     album = get_object_or_404(EventAlbum, pk=pk)
@@ -766,12 +796,27 @@ def event_album_detail(request, pk):
     comments = album.comments.all()
     album_type_id = ContentType.objects.get_for_model(EventAlbum).id
     photo_type_id = ContentType.objects.get_for_model(EventPhoto).id
-    return render(request, 'app/event_album_detail.html', {
+    comment_type_id = ContentType.objects.get_for_model(EventComment).id
+
+    if request.method == 'POST' and request.user.is_authenticated:
+        form = EventCommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.album = album
+            comment.author = request.user
+            comment.save()
+            return redirect('event_album_detail', pk=pk)
+    else:
+        form = EventCommentForm()
+
+    return render(request, 'albums/event_album_detail.html', {
         'album': album,
         'photos': photos,
         'comments': comments,
+        'form': form,
         'album_type_id': album_type_id,
         'photo_type_id': photo_type_id,
+        'comment_type_id': comment_type_id,
     })
 
 @login_required
@@ -779,11 +824,13 @@ def create_event_album(request):
     if request.method == 'POST':
         form = EventAlbumForm(request.POST)
         if form.is_valid():
-            album = form.save()
+            album = form.save(commit=False)
+            album.author = request.user
+            album.save()
             return redirect('event_album_detail', pk=album.pk)
     else:
         form = EventAlbumForm()
-    return render(request, 'app/create_event_album.html', {'form': form})
+    return render(request, 'albums/create_event_album.html', {'form': form})
 
 @login_required
 def add_event_photo(request, pk):
@@ -795,7 +842,7 @@ def add_event_photo(request, pk):
         return redirect('event_album_detail', pk=album.pk)
     else:
         form = EventPhotoForm()
-    return render(request, 'app/add_event_photo.html', {'form': form, 'album': album})
+    return render(request, 'albums/add_event_photo.html', {'form': form, 'album': album})
 
 @login_required
 def add_event_comment(request, pk):
@@ -805,7 +852,7 @@ def add_event_comment(request, pk):
         if text:
             EventComment.objects.create(album=album, author=request.user, text=text)
             return redirect('event_album_detail', pk=album.pk)
-    return render(request, 'app/add_event_comment.html', {'album': album})
+    return render(request, 'albums/add_event_comment.html', {'album': album})
 
 @login_required
 def add_photo_comment(request, photo_id):
@@ -820,7 +867,7 @@ def add_photo_comment(request, photo_id):
             return redirect('event_album_detail', pk=photo.album.pk)
     else:
         form = PhotoCommentForm()
-    return render(request, 'app/add_photo_comment.html', {'form': form, 'photo': photo})
+    return render(request, 'albums/add_photo_comment.html', {'form': form, 'photo': photo})
 
 @login_required
 def like_album(request, pk):
@@ -835,3 +882,40 @@ def dislike_album(request, pk):
     album.dislikes += 1
     album.save()
     return redirect('event_album_detail', pk=pk)
+
+@login_required
+def edit_event_comment(request, pk):
+    comment = get_object_or_404(EventComment, pk=pk)
+    if request.user != comment.author:
+        return HttpResponseForbidden("Вы не можете редактировать этот комментарий.")
+    if request.method == 'POST':
+        text = request.POST.get('text')
+        if text:
+            comment.text = text
+            comment.save()
+            return redirect('event_album_detail', pk=comment.album.pk)
+    return render(request, 'albums/edit_event_comment.html', {'comment': comment})
+
+@login_required
+def edit_event_album(request, pk):
+    album = get_object_or_404(EventAlbum, pk=pk)
+    if request.user != album.author:
+        return HttpResponseForbidden("Вы не можете редактировать этот альбом.")
+    if request.method == 'POST':
+        form = EventAlbumForm(request.POST, instance=album)
+        if form.is_valid():
+            form.save()
+            return redirect('event_album_detail', pk=album.pk)
+    else:
+        form = EventAlbumForm(instance=album)
+    return render(request, 'albums/edit_event_album.html', {'form': form, 'album': album})
+
+@login_required
+def delete_event_album(request, pk):
+    album = get_object_or_404(EventAlbum, pk=pk)
+    if request.user != album.author:
+        return HttpResponseForbidden("Вы не можете удалить этот альбом.")
+    if request.method == 'POST':
+        album.delete()
+        return redirect('event_albums_list')
+    return render(request, 'albums/delete_event_album.html', {'album': album})

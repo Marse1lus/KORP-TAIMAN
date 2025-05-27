@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import User, KnowledgeCategory, KnowledgeArticle, KnowledgeComment, NewsCategory, News, NewsComment, EventAlbum, EventPhoto, EventComment
+from .models import User, KnowledgeCategory, KnowledgeArticle, KnowledgeComment, NewsCategory, EventAlbum, EventPhoto, EventComment
 from .models import Reaction
+from news_app.models import News
 
 class UserSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -24,7 +25,6 @@ class KnowledgeCommentSerializer(serializers.ModelSerializer):
 		fields = ['id', 'article', 'author', 'content', 'created_at']
 		read_only_fields = ['article', 'author', 'created_at']
 
-
 class NewsCategorySerializer(serializers.ModelSerializer):
 	class Meta:
 		model = NewsCategory
@@ -35,10 +35,10 @@ class NewsSerializer(serializers.ModelSerializer):
 		model = News
 		fields = ['id', 'title', 'content', 'published_date', 'is_published', 'category','author', 'views', 'likes', 'dislikes']
  
-class NewsCommentSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = NewsComment
-		fields = ['id', 'news', 'author', 'text', 'created_at', 'likes', 'dislikes']
+# class NewsCommentSerializer(serializers.ModelSerializer):
+# 	class Meta:
+# 		model = NewsComment
+# 		fields = ['id', 'news', 'author', 'text', 'created_at', 'likes', 'dislikes']
 
 class EventAlbumSerializer(serializers.ModelSerializer):
 	class Meta:

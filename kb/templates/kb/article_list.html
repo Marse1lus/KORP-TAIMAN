@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load content_tags %}
+{% block content %}
+<h2>Статьи</h2>
+<a href="{% url 'create_article' %}" class="btn btn-success mb-3">Добавить статью</a>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="form-inline">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Поиск по статьям..." value="{{ search_query|default:'' }}">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Поиск</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if search_query %}
+    <p>Результаты поиска по запросу: <b>{{ search_query }}</b></p>
+{% endif %}
+
+{% if articles %}
+	<div class="row">
+		{% for article in articles %}
+		<div class="col-md-4 mb-4">
+        {% article_card article %}
+		</div>
+	{% endfor %}
+</div>
+{% else %}
+    <p>Статей пока нет.</p>
+{% endif %}
+{% endblock %} 
+
+

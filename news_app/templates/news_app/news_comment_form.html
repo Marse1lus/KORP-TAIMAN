@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{% if form.instance.pk %}Редактировать{% else %}Добавить{% endif %} комментарий к новости</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <a href="{% url 'news:news_detail' news_item.pk %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% if news_item.image %}
+    <img src="{{ news_item.image.url }}" alt="Изображение" class="img-fluid">
+{% endif %}
+{% if news_item.attachment %}
+    <a href="{{ news_item.attachment.url }}" download>Скачать вложение</a>
+{% endif %}
+{% endblock %}

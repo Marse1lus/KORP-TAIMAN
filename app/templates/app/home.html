@@ -1,22 +1,9 @@
 {% extends 'base.html' %}
+{% load content_tags %}
 
 {% block content %}
 <div class="container mt-4">
 	<h1>Салам алейкум Родной!</h1>
-
-	<div class="row mb-4">
-		<div class="col-md-8">
-			<form method="get" class="form-inline">
-				<div class="input-group">
-					<input type="text" name="q" class="form-control" placeholder="Поиск по статьям..." value="{{ search_query|default:'' }}">
-					<div class="input-group-append">
-						<button class="btn btn-primary" type="submit">Поиск</button>
-					</div>
-				</div>
-			</form>
-		</div>
-	</div>
-
 	{% if search_query %}
 		<p>Результаты поиска по запросу: <b>{{ search_query }}</b></p>
 	{% endif %}
@@ -25,28 +12,49 @@
 		<div class="row">
 			{% for article in articles %}
 				<div class="col-md-4 mb-4">
-					<div class="card h-100">
-						{% if article.image %}
-							<img src="{{ article.image.url }}" class="card-img-top" alt="Изображение статьи" style="max-height: 150px; object-fit: cover;">
-						{% endif %}
-						<div class="card-body">
-							<h5 class="card-title">
-								<a href="{% url 'article_detail' article.pk %}">{{ article.title }}</a>
-							</h5>
-							<p class="card-text">{{ article.content|truncatewords:20 }}</p>
-							<small class="text-muted">Категория: {{ article.category.name }}</small>
-							<p class="card-text">
-								<small class="text-muted">
-									Опубликовано: {{ article.published_at|date:"d.m.Y H:i" }}
-								</small>
-							</p>
-						</div>
-					</div>
+					{% article_card article %}
 				</div>
 			{% endfor %}
 		</div>
 	{% else %}
 		<p>Пока нет ни одной статьи.</p>
 	{% endif %}
+
+	<h2>Свежие новости</h2>
+	<div class="row">
+		{% for news in news_list %}
+			<div class="col-md-4 mb-3">
+				<div class="card h-100">
+					<div class="card-body">
+						<h5 class="card-title">{{ news.title }}</h5>
+						<p class="card-text">{{ news.content|truncatechars:100 }}</p>
+						<a href="{% url 'news:news_detail' news.pk %}" class="btn btn-primary">Подробнее</a>
+					</div>
+				</div>
+			</div>
+		{% empty %}
+			<p>Нет новостей.</p>
+		{% endfor %}
+	</div>
+
+	<h2>Альбомы мероприятий</h2>
+	<div class="row">
+		{% for album in albums %}
+			<div class="col-md-4 mb-3">
+				<div class="card h-100">
+					{% if album.photos.first %}
+						<img src="{{ album.photos.first.photo.url }}" class="card-img-top" alt="Фото альбома">
+					{% endif %}
+					<div class="card-body">
+						<h5 class="card-title">{{ album.title }}</h5>
+						<p class="card-text">{{ album.description|truncatechars:100 }}</p>
+						<a href="{% url 'event_album_detail' album.pk %}" class="btn btn-primary">Смотреть альбом</a>
+					</div>
+				</div>
+			</div>
+		{% empty %}
+			<p>Нет альбомов.</p>
+		{% endfor %}
+	</div>
 </div>
 {% endblock %}

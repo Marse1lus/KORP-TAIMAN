@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load content_tags %}
+{% block content %}
+<h2>Альбомы мероприятий</h2>
+<a href="{% url 'create_event_album' %}" class="btn btn-success mb-3">Добавить альбом</a>
+
+{% if albums %}
+<div class="row">
+    {% for album in albums %}
+    <div class="col-md-4 mb-4">
+        {% album_card album %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+    <p>Альбомов пока нет.</p>
+{% endif %}
+{% endblock %}

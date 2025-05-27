@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load content_tags %}
+{% block content %}
+<h2>Новости</h2>
+<a href="{% url 'news:news_create' %}" class="btn btn-success mb-3">Добавить новость</a>
+
+{% if news %}
+<div class="row">
+    {% for item in news %}
+    <div class="col-md-4 mb-4">
+        {% news_card item %}
+        </div>
+    {% endfor %}
+</div>
+{% else %}
+    <p>Новостей пока нет.</p>
+{% endif %}
+{% endblock %}

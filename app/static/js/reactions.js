@@ -2,6 +2,9 @@ function initReactions(isAuthenticated, loginUrl) {
     isAuthenticated = (isAuthenticated === 'true');
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
+    // Узнай id ContentType для EventPhoto через Django shell и подставь сюда
+    const EVENT_PHOTO_TYPE_ID = 7; // <-- замени на свой id
+
     document.querySelectorAll('.reaction-btn').forEach(button => {
         button.addEventListener('click', async function() {
             if (!isAuthenticated) {
@@ -10,9 +13,32 @@ function initReactions(isAuthenticated, loginUrl) {
             }
 
             const type = this.dataset.type;
-            const contentType = this.dataset.contentType;
-            const objectId = this.dataset.objectId;
+            const contentType = parseInt(this.dataset.contentType, 10);
+            const objectId = parseInt(this.dataset.objectId, 10);
             
+            // Для EventPhoto — отдельный URL
+            if (contentType === EVENT_PHOTO_TYPE_ID) {
+                let url = `/albums/photo/${objectId}/${type}/`;
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (type === 'like') {
+                            this.querySelector('.likes-count').textContent = data.likes;
+                        } else {
+                            this.querySelector('.dislikes-count').textContent = data.dislikes;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            } else {
+                // Для остальных — старый API
             try {
                 const response = await fetch('/api/reactions/', {
                     method: 'POST',
@@ -29,7 +55,6 @@ function initReactions(isAuthenticated, loginUrl) {
 
                 if (response.ok) {
                     const data = await response.json();
-
                     document.querySelectorAll(
                         `.reaction-btn[data-object-id="${data.object_id}"][data-content-type="${data.content_type}"]`
                     ).forEach(btn => {
@@ -42,6 +67,7 @@ function initReactions(isAuthenticated, loginUrl) {
                 }
             } catch (error) {
                 console.error('Error:', error);
+                }
             }
         });
     });

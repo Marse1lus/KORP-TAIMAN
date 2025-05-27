@@ -1,7 +1,8 @@
 from django import forms
-from app.models import KnowledgeArticle, KnowledgeComment, User, News, NewsComment, EventAlbum, EventPhoto, PhotoComment
+from app.models import KnowledgeArticle, KnowledgeComment, EventAlbum, EventPhoto
+from news_app.models import News, NewsComment
+from albums.models import PhotoComment
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 User = get_user_model()
@@ -32,29 +33,23 @@ class ProfileEditForm(forms.ModelForm):
 		model = User
 		fields = ['username', 'email', 'first_name', 'last_name', 'photo', 'position', 'department', 'bio']
 
-class NewsForm(forms.ModelForm):
-	class Meta:
-		model = News
-		fields = ['title', 'content', 'category', 'image', 'attachment', 'is_published']
-
-class NewsCommentForm(forms.ModelForm):
-	class Meta:
-		model = NewsComment
-		fields = ['text']
+# class NewsCommentForm(forms.ModelForm):
+# 	class Meta:
+# 		model = NewsComment
+# 		fields = ['text']
 
 class EventAlbumForm(forms.ModelForm):
 	class Meta:
 		model = EventAlbum
-		fields = ['title', 'description']
+		fields = ['title', 'description', 'event_date']
+		widgets = {
+			'title': forms.TextInput(attrs={'class': 'form-control'}),
+			'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+			'event_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+		}
 
 class EventPhotoForm(forms.ModelForm):
 	class Meta:
 		model = EventPhoto
 		fields = ['photo', 'caption']
-
-class PhotoCommentForm(forms.ModelForm):
-	class Meta:
-		model = PhotoComment
-		fields = ['text']
-		
 

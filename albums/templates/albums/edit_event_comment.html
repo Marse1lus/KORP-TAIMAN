@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Редактировать комментарий</h2>
+<form method="post">
+    {% csrf_token %}
+    <textarea name="text" rows="4" class="form-control">{{ comment.text }}</textarea>
+    <button type="submit" class="btn btn-success mt-2">Сохранить</button>
+    <a href="{% url 'event_album_detail' comment.album.pk %}" class="btn btn-secondary mt-2">Отмена</a>
+</form>
+{% endblock %} 

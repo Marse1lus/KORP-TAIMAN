@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load content_tags %}
+{% load static %}
+{% block content %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h2>{{ article.title }}</h2>
+        {% if article.image %}
+            <img src="{{ article.image.url }}" class="img-fluid mb-3" alt="Изображение статьи" style="max-width: 100%; max-height: 350px; object-fit: contain;">
+        {% endif %}
+        <p class="card-text">{{ article.content }}</p>
+        <div class="reactions mb-3">
+            <button class="btn btn-outline-success reaction-btn"
+                    data-type="like"
+                    data-content-type="{{ article_type_id }}"
+                    data-object-id="{{ article.id }}">
+                👍 <span class="likes-count">{{ article.likes }}</span>
+            </button>
+            <button class="btn btn-outline-danger reaction-btn"
+                    data-type="dislike"
+                    data-content-type="{{ article_type_id }}"
+                    data-object-id="{{ article.id }}">
+                👎 <span class="dislikes-count">{{ article.dislikes }}</span>
+            </button>
+        </div>
+        {% if user == article.author %}
+            <a href="{% url 'kb:kb_edit' article.pk %}" class="btn btn-warning">Редактировать</a>
+            <a href="{% url 'kb:kb_delete' article.pk %}" class="btn btn-danger">Удалить</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="comments-section mt-4">
+    <h3>Комментарии</h3>
+    {% for comment in comments %}
+        {% comment_card comment user comment_type_id %}
+    {% endfor %}
+</div>
+
+{% if user.is_authenticated %}
+    <h3>Добавить комментарий</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Добавить</button>
+    </form>
+{% else %}
+    <p>Войдите, чтобы оставить комментарий.</p>
+{% endif %}
+
+
+
+<script src="{% static 'js/reactions.js' %}"></script>
+<script>
+    initReactions('{{ user.is_authenticated|yesno:"true,false" }}', '{% url "login" %}');
+</script>
+{% endblock %}
+

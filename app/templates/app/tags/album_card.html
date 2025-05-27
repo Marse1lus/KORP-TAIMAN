@@ -1,0 +1,11 @@
+{% load content_tags %}
+<div class="card h-100">
+    <div class="card-body">
+        <h5 class="card-title">{{ album.title }}</h5>
+        <p class="card-text">{{ album.description|truncatewords:15 }}</p>
+        <p class="card-text">
+            <small class="text-muted">Дата: {% format_date album.event_date %}</small>
+        </p>
+        <a href="{% url 'event_album_detail' album.id %}" class="btn btn-primary">Открыть альбом</a>
+    </div>
+</div> 

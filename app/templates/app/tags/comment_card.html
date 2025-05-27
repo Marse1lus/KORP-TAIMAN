@@ -1,0 +1,46 @@
+{% load content_tags %}
+{% load static %}
+<div class="card mb-3">
+    <div class="card-body">
+        <p class="card-text">
+            {% if comment.content %}
+                {{ comment.content }}
+            {% else %}
+                {{ comment.text }}
+            {% endif %}
+        </p>
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                {{ comment.author.username }} - {% format_date comment.created_at %}
+            </small>
+            <div class="reactions">
+                <button class="btn btn-sm btn-outline-success reaction-btn"
+                        data-type="like"
+                        data-content-type="{{ comment_type_id }}"
+                        data-object-id="{{ comment.id }}">
+                    <i class="fas fa-thumbs-up"></i>
+                    <span class="likes-count">{{ comment.likes }}</span>
+                </button>
+                <button class="btn btn-sm btn-outline-danger reaction-btn"
+                        data-type="dislike"
+                        data-content-type="{{ comment_type_id }}"
+                        data-object-id="{{ comment.id }}">
+                    <i class="fas fa-thumbs-down"></i>
+                    <span class="dislikes-count">{{ comment.dislikes }}</span>
+                </button>
+            </div>
+            {% if can_edit %}
+                {% if article %}
+                    <a href="{% url edit_url article_id=article.id pk=comment.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url delete_url article_id=article.id pk=comment.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% elif news %}
+                    <a href="{% url edit_url news_id=news.id pk=comment.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url delete_url news_id=news.id pk=comment.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% elif album %}
+                    <a href="{% url edit_url comment.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a href="{% url delete_url album.id comment.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div> 

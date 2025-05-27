@@ -1,0 +1,18 @@
+{% load content_tags %}
+<div class="card h-100">
+    {% if news.image %}
+        <img src="{{ news.image.url }}" class="card-img-top" alt="Миниатюра" style="max-height: 150px; object-fit: cover;">
+    {% endif %}
+    <div class="card-body">
+        <h5 class="card-title">
+            <a href="{% url 'news:news_detail' news.pk %}">{{ news.title }}</a>
+        </h5>
+        <p class="card-text">{{ news.content|truncatewords:20 }}</p>
+        <small class="text-muted">Категория: {{ news.category.name }}</small>
+        <p class="card-text">
+            <small class="text-muted">
+                Опубликовано: {% format_date news.published_date %}
+            </small>
+        </p>
+    </div>
+</div> 

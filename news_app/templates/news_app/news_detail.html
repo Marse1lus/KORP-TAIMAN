@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load content_tags %}
+{% block content %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h2>{{ news_item.title }}</h2>
+        {% if news_item.image %}
+            <img src="{{ news_item.image.url }}" class="img-fluid mb-3" alt="Изображение новости" style="max-width: 100%; max-height: 350px; object-fit: contain;">
+        {% endif %}
+        <p class="card-text">{{ news_item.content }}</p>
+        <div class="reactions mb-3">
+            <button class="btn btn-outline-success reaction-btn"
+                    data-type="like"
+                    data-content-type="{{ news_type_id }}"
+                    data-object-id="{{ news_item.id }}">
+                👍 <span class="likes-count">{{ news_item.likes }}</span>
+            </button>
+            <button class="btn btn-outline-danger reaction-btn"
+                    data-type="dislike"
+                    data-content-type="{{ news_type_id }}"
+                    data-object-id="{{ news_item.id }}">
+                👎 <span class="dislikes-count">{{ news_item.dislikes }}</span>
+            </button>
+        </div>
+        {% if user == news_item.author %}
+            <a href="{% url 'news:news_edit' news_item.pk %}" class="btn btn-warning">Редактировать</a>
+            <a href="{% url 'news:news_delete' news_item.pk %}" class="btn btn-danger">Удалить</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="comments-section mt-4">
+    <h3>Комментарии</h3>
+    {% for comment in comments %}
+        {% comment_card comment user comment_type_id %}
+    {% endfor %}
+</div>
+
+{% if user.is_authenticated %}
+    <h3>Добавить комментарий</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Добавить</button>
+    </form>
+{% else %}
+    <p>Войдите, чтобы оставить комментарий.</p>
+{% endif %}
+
+<script src="{% static 'js/reactions.js' %}"></script>
+<script>
+    initReactions('{{ user.is_authenticated|yesno:"true,false" }}', '{% url "login" %}');
+</script>
+{% endblock %}
