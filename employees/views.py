@@ -4,9 +4,11 @@ from django.contrib import messages
 from django.db.models import Q
 from .models import Employee, Department, Position
 from .forms import EmployeeForm, DepartmentForm, PositionForm
+from django.contrib.auth import get_user_model
 
 def employee_list(request):
-    employees = Employee.objects.filter(is_active=True)
+    User = get_user_model()
+    employees = User.objects.filter(is_active=True).select_related('employee_profile')
     departments = Department.objects.all()
     search_query = request.GET.get('q', '')
     department_id = request.GET.get('department', '')
