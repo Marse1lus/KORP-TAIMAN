@@ -562,7 +562,7 @@ def articles_list(request):
 		'articles': articles,
 		'categories': categories,
 		'search_query': search_query,
-	})
+		})
 
 @login_required
 def create_article(request):

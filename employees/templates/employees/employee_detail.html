@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            {% if employee.user.photo %}
+                <img src="{{ employee.user.photo.url }}" class="img-fluid rounded" alt="Фото сотрудника">
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <h2>{{ employee.user.get_full_name }}</h2>
+            <p><strong>Email:</strong> {{ employee.user.email }}</p>
+            <p><strong>Должность:</strong> {{ employee.position.name|default:"Не указана" }}</p>
+            <p><strong>Отдел:</strong> {{ employee.department.name|default:"Не указан" }}</p>
+            {% if employee.phone %}
+                <p><strong>Телефон:</strong> {{ employee.phone }}</p>
+            {% endif %}
+            
+            {% if employee.bio %}
+                <h4>О себе</h4>
+                <p>{{ employee.bio }}</p>
+            {% endif %}
+            
+            {% if employee.skills %}
+                <h4>Навыки</h4>
+                <p>{{ employee.skills }}</p>
+            {% endif %}
+            
+            {% if user == employee.user or user.is_staff %}
+                <a href="{% url 'employees:employee_edit' employee.pk %}" class="btn btn-warning">Редактировать профиль</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary">Назад к списку сотрудников</a>
+    </div>
+</div>
+{% endblock %} 

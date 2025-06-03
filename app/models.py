@@ -57,7 +57,7 @@ class NewsCategory(models.Model):
 
 	def __str__(self):
 		return self.name
-
+	
 class KnowledgeComment(models.Model):
     article = models.ForeignKey(KnowledgeArticle, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey('app.User', on_delete=models.CASCADE, related_name='knowledge_comments')

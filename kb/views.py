@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from app.models import KnowledgeArticle
 from .forms import ArticleForm
+from django.urls import reverse
 
 def article_list(request):
     articles = KnowledgeArticle.objects.all().order_by('-published_at')
@@ -38,7 +39,7 @@ def article_edit(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Статья успешно обновлена!')
-            return redirect('kb:kb_detail', pk=article.pk)
+            return redirect('article_detail', pk=article.pk)
     else:
         form = ArticleForm(instance=article)
     return render(request, 'kb/article_form.html', {'form': form})

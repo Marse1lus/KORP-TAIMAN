@@ -41,7 +41,7 @@ media/
 
 # Project specific
 media/
-static/
+static/ 
 
 # Environment variables
 .env

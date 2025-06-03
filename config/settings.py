@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'kb',
     'news_app',
 	'albums', 
+    'employees',
 ]
 
 MIDDLEWARE = [

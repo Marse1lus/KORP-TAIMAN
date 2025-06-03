@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Сотрудники компании</h2>
+    
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" class="form-inline">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Поиск по имени или должности..." value="{{ search_query|default:'' }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">Поиск</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Фильтр по отделам -->
+    <div class="mb-4">
+        <h4>Отделы:</h4>
+        <div class="btn-group">
+            <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-primary {% if not current_department %}active{% endif %}">Все</a>
+            {% for dept in departments %}
+                <a href="{% url 'employees:employee_list' %}?department={{ dept.id }}" 
+                   class="btn btn-outline-primary {% if dept.id|stringformat:'i' == current_department %}active{% endif %}">
+                    {{ dept.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <div class="row">
+        {% for employee in employees %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if employee.user.photo %}
+                        <img src="{{ employee.user.photo.url }}" class="card-img-top" alt="Фото сотрудника">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ employee.user.get_full_name }}</h5>
+                        <p class="card-text">
+                            <strong>Должность:</strong> {{ employee.position.name|default:"Не указана" }}<br>
+                            <strong>Отдел:</strong> {{ employee.department.name|default:"Не указан" }}
+                        </p>
+                        <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-primary">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <p class="text-center">Сотрудников не найдено</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 
