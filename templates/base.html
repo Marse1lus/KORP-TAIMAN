@@ -43,13 +43,12 @@
 				<div class="d-flex align-items-center ms-auto">
 				</form> 
 					{% if user.is_authenticated %}
-
-						<a class="btn btn-outline-primary me-2" href="{% url 'profile' user.pk %}">Профиль</a>
-						<a class="btn btn-outline-primary" href="{% url 'logout' %}">Выйти</a>
-				{% else %}
-						<a class="btn btn-outline-primary me-2" href="{% url 'login' %}">Войти</a>
-						<a class="btn btn-primary" href="{% url 'register' %}">Регистрация</a>
-				{% endif %}
+						<a href="{% url 'profile' user.pk %}" class="btn btn-outline-primary">Профиль</a>
+						<a href="{% url 'logout' %}" class="btn btn-outline-secondary">Выйти</a>
+					{% else %}
+						<a href="{% url 'login' %}" class="btn btn-outline-primary">Войти</a>
+						<a href="{% url 'register' %}" class="btn btn-primary">Регистрация</a>
+					{% endif %}
 				</div>
 			</div>
 		</div>

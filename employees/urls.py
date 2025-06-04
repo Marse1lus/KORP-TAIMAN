@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.employee_list, name='employee_list'),
     path('<int:pk>/', views.employee_detail, name='employee_detail'),
     path('<int:pk>/edit/', views.employee_edit, name='employee_edit'),
+    path('<int:pk>/create/', views.employee_create, name='employee_create'),
     
     # Отделы
     path('departments/', views.department_list, name='department_list'),

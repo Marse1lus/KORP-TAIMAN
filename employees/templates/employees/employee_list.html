@@ -1,59 +1,131 @@
 {% extends 'base.html' %}
-{% block content %}
-<div class="container mt-4">
-    <h2>Сотрудники компании</h2>
-    
+{% load static %}
 
+{% block content %}
+<div class="container py-4">
+    <!-- Фильтры и поиск -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <form method="get" class="form-inline">
-                <div class="input-group">
-                    <input type="text" name="q" class="form-control" placeholder="Поиск по имени или должности..." value="{{ search_query|default:'' }}">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit">Поиск</button>
-                    </div>
-                </div>
+            <form method="get" class="d-flex gap-2">
+                <input type="text" name="q" class="form-control" placeholder="Поиск по имени, должности или email" value="{{ search_query }}">
+                <select name="department" class="form-select" style="max-width: 200px;">
+                    <option value="">Все отделы</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if current_department == dept.id|stringformat:"i" %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <select name="position" class="form-select" style="max-width: 200px;">
+                    <option value="">Все должности</option>
+                    {% for pos in positions %}
+                        <option value="{{ pos.id }}" {% if current_position == pos.id|stringformat:"i" %}selected{% endif %}>
+                            {{ pos.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">Применить</button>
+                {% if search_query or current_department or current_position %}
+                    <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary">Сбросить</a>
+                {% endif %}
             </form>
         </div>
     </div>
 
-    <!-- Фильтр по отделам -->
-    <div class="mb-4">
-        <h4>Отделы:</h4>
-        <div class="btn-group">
-            <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-primary {% if not current_department %}active{% endif %}">Все</a>
-            {% for dept in departments %}
-                <a href="{% url 'employees:employee_list' %}?department={{ dept.id }}" 
-                   class="btn btn-outline-primary {% if dept.id|stringformat:'i' == current_department %}active{% endif %}">
-                    {{ dept.name }}
-                </a>
-            {% endfor %}
-        </div>
-    </div>
-
-
+    <!-- Список сотрудников -->
     <div class="row">
-        {% for employee in employees %}
+        {% for user in employees %}
             <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    {% if employee.user.photo %}
-                        <img src="{{ employee.user.photo.url }}" class="card-img-top" alt="Фото сотрудника">
-                    {% endif %}
+                <div class="card h-100 shadow-sm">
+                    <div class="card-img-top position-relative" style="height: 200px; overflow: hidden;">
+                        {% if user.photo %}
+                            <img src="{{ user.photo.url }}" class="w-100 h-100 object-fit-cover" alt="Фото {{ user.get_full_name }}">
+                        {% else %}
+                            <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                <i class="fas fa-user fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">{{ employee.user.get_full_name }}</h5>
+                        <h5 class="card-title">{{ user.get_full_name }}</h5>
+                        <p class="mb-1"><b>Username:</b> {{ user.username }}</p>
                         <p class="card-text">
-                            <strong>Должность:</strong> {{ employee.position.name|default:"Не указана" }}<br>
-                            <strong>Отдел:</strong> {{ employee.department.name|default:"Не указан" }}
+                            <small class="text-muted">
+                                <i class="fas fa-envelope"></i> {{ user.email }}
+                            </small>
                         </p>
-                        <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-primary">Подробнее</a>
+                        {% if user.employee_profile %}
+                            <p class="card-text">
+                                <strong>Должность:</strong><br>
+                                {{ user.employee_profile.position_name }}
+                            </p>
+                            <p class="card-text">
+                                <strong>Отдел:</strong><br>
+                                {{ user.employee_profile.department_name }}
+                            </p>
+                            {% if user.employee_profile.phone %}
+                                <p class="card-text">
+                                    <strong>Телефон:</strong><br>
+                                    {{ user.employee_profile.phone }}
+                                </p>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">
+                                <i class="fas fa-info-circle"></i> Профиль не заполнен
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'employees:employee_detail' user.pk %}" class="btn btn-primary w-100">
+                            <i class="fas fa-user-circle"></i> Подробнее
+                        </a>
                     </div>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
-                <p class="text-center">Сотрудников не найдено</p>
+                <div class="alert alert-info">
+                    Сотрудники не найдены
+                </div>
             </div>
         {% endfor %}
     </div>
+
+    <!-- Пагинация -->
+    {% if employees.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if employees.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ employees.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_department %}&department={{ current_department }}{% endif %}{% if current_position %}&position={{ current_position }}{% endif %}">
+                            Предыдущая
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in employees.paginator.page_range %}
+                    {% if employees.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_department %}&department={{ current_department }}{% endif %}{% if current_position %}&position={{ current_position }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if employees.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ employees.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_department %}&department={{ current_department }}{% endif %}{% if current_position %}&position={{ current_position }}{% endif %}">
+                            Следующая
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
 </div>
 {% endblock %} 

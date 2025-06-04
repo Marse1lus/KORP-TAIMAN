@@ -1,39 +1,87 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
     <div class="row">
+        <!-- Левая колонка с фото и основной информацией -->
         <div class="col-md-4">
-            {% if employee.user.photo %}
-                <img src="{{ employee.user.photo.url }}" class="img-fluid rounded" alt="Фото сотрудника">
-            {% endif %}
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-4" style="height: 300px; overflow: hidden;">
+                        {% if user.photo %}
+                            <img src="{{ user.photo.url }}" class="w-100 h-100 object-fit-cover rounded" alt="Фото {{ user.get_full_name }}">
+                        {% else %}
+                            <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center rounded">
+                                <i class="fas fa-user fa-5x text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <h3 class="card-title">{{ user.get_full_name }}</h3>
+                    <p class="text-muted mb-1"><i class="fas fa-envelope"></i> {{ user.email }}</p>
+                    <p class="mb-1"><b>Имя:</b> {{ user.first_name }}</p>
+                    <p class="mb-1"><b>Фамилия:</b> {{ user.last_name }}</p>
+                    {% if employee %}
+                        <hr>
+                        <p class="mb-1"><b>Должность:</b> {{ employee.position_name|default:'не указано' }}</p>
+                        <p class="mb-1"><b>Отдел:</b> {{ employee.department_name|default:'не указано' }}</p>
+                        <p class="mb-1"><b>Телефон:</b> {{ employee.phone|default:'не указано' }}</p>
+                        <p class="mb-1"><b>Навыки:</b> {{ employee.skills|default:'не указано' }}</p>
+                        <p class="mb-1"><b>Дата приема:</b> {{ employee.hire_date|date:'d.m.Y'|default:'не указано' }}</p>
+                        {% if user == request.user or request.user.is_staff %}
+                            <div class="mt-4">
+                                <a href="{% url 'employees:employee_edit' employee.pk %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Редактировать профиль
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i> Профиль не заполнен
+                            {% if user == request.user or request.user.is_staff %}
+                                <div class="mt-2">
+                                    <a href="{% url 'employees:employee_create' user.pk %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus"></i> Создать профиль
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+
+        <!-- Правая колонка с дополнительной информацией -->
         <div class="col-md-8">
-            <h2>{{ employee.user.get_full_name }}</h2>
-            <p><strong>Email:</strong> {{ employee.user.email }}</p>
-            <p><strong>Должность:</strong> {{ employee.position.name|default:"Не указана" }}</p>
-            <p><strong>Отдел:</strong> {{ employee.department.name|default:"Не указан" }}</p>
-            {% if employee.phone %}
-                <p><strong>Телефон:</strong> {{ employee.phone }}</p>
-            {% endif %}
-            
-            {% if employee.bio %}
-                <h4>О себе</h4>
-                <p>{{ employee.bio }}</p>
-            {% endif %}
-            
-            {% if employee.skills %}
-                <h4>Навыки</h4>
-                <p>{{ employee.skills }}</p>
-            {% endif %}
-            
-            {% if user == employee.user or user.is_staff %}
-                <a href="{% url 'employees:employee_edit' employee.pk %}" class="btn btn-warning">Редактировать профиль</a>
-            {% endif %}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Информация о сотруднике</h4>
+                    {% if employee %}
+                        <div class="mb-4">
+                            <h5><i class="fas fa-user-circle"></i> О себе</h5>
+                            <p>{{ employee.bio|default:'не указано'|linebreaks }}</p>
+                        </div>
+                        <div class="mb-4">
+                            <h5><i class="fas fa-tools"></i> Навыки</h5>
+                            <p>{{ employee.skills|default:'не указано'|linebreaks }}</p>
+                        </div>
+                        <div class="mb-4">
+                            <h5><i class="fas fa-calendar-alt"></i> Дата приема на работу</h5>
+                            <p>{{ employee.hire_date|date:'d.m.Y'|default:'не указано' }}</p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Дополнительная информация недоступна
+                        </div>
+                    {% endif %}
+                    <div class="mt-4">
+                        <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Назад к списку
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="mt-4">
-        <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary">Назад к списку сотрудников</a>
     </div>
 </div>
 {% endblock %} 
